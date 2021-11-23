@@ -169,6 +169,10 @@ int main(int argc, char *argv[])
         	RtmpPubDel(rtmp_ctx);
 		return 0;
 	}
+	if (RtmpPubConnect(rtmp_ctx)) {
+		log("rtmp connect err, errno:%d", errno);
+		return 0;
+	}
 	start_ipc_simulator(on_video, on_audio);
 	for(;;) {
 		sleep(3);
