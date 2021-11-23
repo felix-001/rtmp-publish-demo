@@ -1,6 +1,7 @@
 {
 	"files.associations": {
 		"algorithm": "c",
-		"__threading_support": "c"
+		"__threading_support": "c",
+		"stdlib.h": "c"
 	}
 }
