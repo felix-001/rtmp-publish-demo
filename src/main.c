@@ -2,6 +2,9 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <arpa/inet.h>
 #include "rtmp_publish.h"
 
 #define log(fmt, args...) printf("%s $ "fmt"\n", __FUNCTION__, ##args)
@@ -113,7 +116,7 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 		return -1;
 	}
 	annexB2avcc(h264, len, avcc);
-	uint8_t avcc_end = avcc + len;
+	uint8_t * avcc_end = avcc + len;
 
 	while(avcc < avcc_end) {
 		uint8_t nalu_type = avcc[4]&0x1F;
