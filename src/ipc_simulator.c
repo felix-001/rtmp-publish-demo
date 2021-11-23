@@ -61,7 +61,7 @@ void *video_capture_thread(void *param)
 	while(offset < h264_len) {
 		int nalu_len = 0;
 		memcpy(&nalu_len, h264+offset, 4);
-		log("len:%x", nalu_len);
+		//log("len:%x", nalu_len);
 		assert(nalu_len > 0);
 		offset += 4;
 		if (offset+nalu_len > h264_len) {
