@@ -1,0 +1,10 @@
+cmake_minimum_required (VERSION 2.8)
+
+project(rtmp-pubish-demo)
+SET(CMAKE_C_COMPILER  ${CROSS_COMPILE}-gcc )
+SET(CMAKE_CXX_COMPILER ${CROSS_COMPILE}-g++ )
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/includes/)
+link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs/${ARCH}/)
+AUX_SOURCE_DIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/src DIR_SRCS)
+ADD_EXECUTABLE(rtmp-publish-demo ${DIR_SRCS} )
+target_link_libraries(rtmp-publish-demo rtmp_sdk rtmp fdk-aac m pthread )

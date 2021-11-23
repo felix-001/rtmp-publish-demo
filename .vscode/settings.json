@@ -1,0 +1,6 @@
+{
+	"files.associations": {
+		"algorithm": "c",
+		"__threading_support": "c"
+	}
+}
