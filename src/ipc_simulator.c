@@ -11,7 +11,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 
-#define log(fmt, args...) printf("%s> "fmt"\n",  __FUNCTION__, ##args)
+#define log(fmt, args...) printf("%s() "fmt"\n",  __FUNCTION__, ##args)
 
 #define H264_FILE "../media/video.h264"
 #define AAC_FILE "../media/audio.aac"
@@ -59,7 +59,9 @@ void *video_capture_thread(void *param)
 		return NULL;
 	}
 	while(offset < h264_len) {
-		int nalu_len = ntohl(*(int*)h264);
+		int nalu_len = 0;
+		memcpy(&nalu_len, h264+offset, 4);
+		log("len:%x", nalu_len);
 		assert(nalu_len > 0);
 		offset += 4;
 		if (offset+nalu_len > h264_len) {
@@ -69,6 +71,7 @@ void *video_capture_thread(void *param)
 		}
 		int nalu_type = h264[offset+8] & 0x1F;
 		video_cb(h264+offset, nalu_len, timestamp, !(nalu_type == NAL_NON_IDR));
+		offset += nalu_len;
 		timestamp += VIDEO_FRAME_INTERVAL;
 		usleep(VIDEO_FRAME_INTERVAL);
 
