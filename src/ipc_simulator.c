@@ -83,8 +83,10 @@ void *audio_capture_thread(void *param)
 
 void start_ipc_simulator(video_cb_t vcb, audio_cb_t acb)
 {
+	pthread_t tid;
+
 	video_cb = vcb;
 	audio_cb = acb;
-	pthread_create(NULL, NULL, video_capture_thread, NULL);	
-	pthread_create(NULL, NULL, audio_capture_thread, NULL);	
+	pthread_create(&tid, NULL, video_capture_thread, NULL);	
+	pthread_create(&tid, NULL, audio_capture_thread, NULL);	
 }
