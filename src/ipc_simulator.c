@@ -9,8 +9,9 @@
 #include <pthread.h>
 #include <math.h>
 #include <string.h>
+#include <arpa/inet.h>
 
-#define log printf
+#define log(fmt, args...) printf("%s> "fmt"\n",  __FUNCTION__, ##args)
 
 #define H264_FILE "./media/video.h264"
 #define AAC_FILE "./media/audio.aac"
@@ -18,7 +19,7 @@
 #define VIDEO_FRAME_INTERVAL (40) // 模拟帧率25fps
 
 typedef int (*video_cb_t)(char *h264, int len, int64_t timestamp, int is_key);
-typedef int (*audio_cb_t)(char *h264, int len, int64_t timestamp, int is_key);
+typedef int (*audio_cb_t)(char *h264, int len, int64_t timestamp);
 
 static video_cb_t video_cb;
 static audio_cb_t audio_cb;
@@ -53,6 +54,7 @@ void *video_capture_thread(void *param)
 	int h264_len = 0, offset = 0;
 	int64_t timestamp = 0;
 
+	log("enter video capture thread");
 	if ((h264_len = read_file_to_buf(H264_FILE, &h264)) < 0) {
 		return NULL;
 	}
