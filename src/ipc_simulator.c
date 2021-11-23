@@ -94,4 +94,5 @@ void start_ipc_simulator(video_cb_t vcb, audio_cb_t acb)
 	audio_cb = acb;
 	pthread_create(&tid, NULL, video_capture_thread, NULL);	
 	pthread_create(&tid, NULL, audio_capture_thread, NULL);	
+	log("ipc simulator started");
 }
