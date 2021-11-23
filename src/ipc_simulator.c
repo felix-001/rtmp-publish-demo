@@ -13,8 +13,8 @@
 
 #define log(fmt, args...) printf("%s> "fmt"\n",  __FUNCTION__, ##args)
 
-#define H264_FILE "./media/video.h264"
-#define AAC_FILE "./media/audio.aac"
+#define H264_FILE "../media/video.h264"
+#define AAC_FILE "../media/audio.aac"
 #define NAL_NON_IDR (0x01)
 #define VIDEO_FRAME_INTERVAL (40) // 模拟帧率25fps
 
