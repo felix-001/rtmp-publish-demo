@@ -110,6 +110,7 @@ int annexB2avcc(const uint8_t *buf_in, int buf_size, uint8_t *buf_out)
     return 0;
 }
 
+// 模拟ipc的h264回调，模拟ipc编码一帧h264之后，回调此函数，将h264丢给应用层
 int on_video(char *h264, int len, int64_t pts, int is_key)
 {
 	int ret = 0, offset = 0;
@@ -128,16 +129,18 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 		offset += 4;
 		switch(nalu_type) {
 		case  NALU_TYPE_SPS:
-			//log("set sps, len:%d", nalu_size);
+			/* 3. 将sps数据传递给推流sdk */
+			// codec将关键帧丢给应用层，一般sps/pps是随关键帧一起过来的
 			RtmpPubSetVideoTimebase(rtmp_ctx, pts);
                 	RtmpPubSetSps(rtmp_ctx, avcc+offset, nalu_size);
 			break;
 		case NALU_TYPE_PPS:
-			//log("set pps: len:%d", nalu_size);
+			/* 4. 将pps数据传递给推流sdk */
+			// codec将关键帧丢给应用层，一般sps/pps是随关键帧一起过来的
 			RtmpPubSetPps(rtmp_ctx, avcc+offset, nalu_size);
 			break;
 		case NALU_TYPE_IDR:
-			//log("send idr");
+			/* 5. 发送关键帧数据 */
 		 	if (RtmpPubSendVideoKeyframe(rtmp_ctx, avcc+offset, nalu_size, pts)) {
             			log("RtmpPubSendVideoKeyframe() error, errno = %d\n", errno);
 				ret = -1;
@@ -145,7 +148,7 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 			}
 			break;
         	case NALU_TYPE_SLICE:
-			//log("send slice");
+			/* 6. 发送非关键帧数据 */
 			if (RtmpPubSendVideoInterframe(rtmp_ctx, avcc+offset, nalu_size, pts)) {
             			log("RtmpPubSendVideoInterframe() error, errno = %d\n", errno);
 				ret = -1;
@@ -175,16 +178,23 @@ int main(int argc, char *argv[])
 		log("./rtmp-publish-demo <rtmp publish url>");
 		return 0;
 	}
+	/* 1. 创建推流实例化对象 */
 	rtmp_ctx = RtmpPubNew(argv[1], 10, RTMP_PUB_AUDIO_NONE, RTMP_PUB_AUDIO_NONE, RTMP_PUB_TIMESTAMP_ABSOLUTE);
     	if (RtmpPubInit(rtmp_ctx)) {
         	RtmpPubDel(rtmp_ctx);
 		return 0;
 	}
+	/* 2. 连接流媒体服务器 */
 	if (RtmpPubConnect(rtmp_ctx)) {
 		log("rtmp connect err, errno:%d", errno);
 		return 0;
 	}
 	log("rtmp connect %s success", argv[1]);
+	// h264文件模拟ipc相关代码，相关代码不需要关注
+	// 真实的ipc是codec编码一帧h264之后，丢给应用
+	// 层, on_video/on_audio是注册到模拟ipc的
+	// 回调函数，模拟的ipc采集一帧h264/aac之后，
+	// 会调用这个函数，讲h264/aac丢给应用层
 	start_ipc_simulator(on_video, on_audio);
 	for(;;) {
 		sleep(3);
