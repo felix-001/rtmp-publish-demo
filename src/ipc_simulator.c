@@ -48,13 +48,16 @@ static int read_file_to_buf(char *file, char **buf)
         return len;
 }
 
-void *video_capture_thread(void *param)
+// 使用h264文件模拟ipc codec编码一帧h264，回调给应用层
+// 模拟的帧率是25fps,实际的场景是cam sensor采集到yuv/rgb
+// 经过codec编码为h264之后，丢给应用层
+void *video_capture_simulator_thread(void *param)
 {
 	char *h264 = NULL;
 	int h264_len = 0, offset = 0;
-	int64_t timestamp = 0;
+	int64_t pts = 0;
 
-	log("enter video capture thread");
+	log("enter video capture simulator read");
 	if ((h264_len = read_file_to_buf(H264_FILE, &h264)) < 0) {
 		return NULL;
 	}
@@ -70,9 +73,9 @@ void *video_capture_thread(void *param)
 			continue;
 		}
 		int nalu_type = h264[offset+8] & 0x1F;
-		video_cb(h264+offset, nalu_len, timestamp, !(nalu_type == NAL_NON_IDR));
+		video_cb(h264+offset, nalu_len, pts, !(nalu_type == NAL_NON_IDR));
 		offset += nalu_len;
-		timestamp += VIDEO_FRAME_INTERVAL;
+		pts += VIDEO_FRAME_INTERVAL;
 		usleep(VIDEO_FRAME_INTERVAL);
 
 	}
@@ -92,7 +95,7 @@ void start_ipc_simulator(video_cb_t vcb, audio_cb_t acb)
 
 	video_cb = vcb;
 	audio_cb = acb;
-	pthread_create(&tid, NULL, video_capture_thread, NULL);	
+	pthread_create(&tid, NULL, video_capture_simulator_thread, NULL);	
 	pthread_create(&tid, NULL, audio_capture_thread, NULL);	
 	log("ipc simulator started");
 }

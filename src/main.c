@@ -110,7 +110,7 @@ int annexB2avcc(const uint8_t *buf_in, int buf_size, uint8_t *buf_out)
 
 int on_video(char *h264, int len, int64_t pts, int is_key)
 {
-	int ret = 0;
+	int ret = 0, offset = 0;
 	uint8_t *avcc = (uint8_t *)malloc(len);
 	if (!avcc) {
 		return -1;
@@ -118,10 +118,10 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 	annexB2avcc(h264, len, avcc);
 	uint8_t * avcc_end = avcc + len;
 
-	while(avcc < avcc_end) {
+	while(avcc+offset < avcc_end) {
 		uint8_t nalu_type = avcc[4]&0x1F;
 		int nalu_size = ntohl(*(int *)avcc);
-		avcc += 4;
+		offset += 4;
 		switch(nalu_type) {
 		case  NALU_TYPE_SPS:
 			RtmpPubSetVideoTimebase(rtmp_ctx, pts);
@@ -147,7 +147,7 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 		default:
 			break;
 		}
-		avcc += nalu_size;
+		offset += nalu_size;
 	}
 
 err:
