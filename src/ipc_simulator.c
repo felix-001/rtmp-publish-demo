@@ -38,6 +38,7 @@ void *video_capture_simulator_thread(void *param)
 	uint8_t *buf = (uint8_t *)malloc(1024);
 	int64_t pts = 0;
 	int nb_buf = 1024;
+	int ret = 0;
 
 	FILE *fp = fopen(H264_FILE, "r");
 	if (!fp) {
@@ -48,9 +49,16 @@ void *video_capture_simulator_thread(void *param)
 	log("enter video capture simulator thread");
 	for(;;) {
 		int nalu_len = 0;
-		if (fread(&nalu_len, 1, 4, fp) < 0) {
+		ret = fread(&nalu_len, 1, 4, fp);
+		if (ret < 0) {
 			log("fread err");
 			return NULL;
+		}
+		if (ret < 4 && feof(fp)) {
+			// 循环读取
+			log("h264 rewind");
+			fseek(fp, 0, SEEK_SET);
+			continue;
 		}
 		assert(nalu_len > 0);
 		if (nalu_len > nb_buf) {
@@ -60,20 +68,21 @@ void *video_capture_simulator_thread(void *param)
 				return NULL;
 			}
 		}
-		if (fread(buf, 1, nalu_len, fp) < 0) {
+		ret = fread(buf, 1, nalu_len, fp);
+		if (ret < 0) {
 			log("fread err");
 			return NULL;
+		}
+		if (ret < nalu_len && feof(fp)) {
+			// 循环读取
+			log("h264 rewind");
+			fseek(fp, 0, SEEK_SET);
+			continue;
 		}
 		//log("len:%x", nalu_len);
 		video_cb(buf, nalu_len, pts, 0);
 		pts += VIDEO_FRAME_INTERVAL;
 		usleep(VIDEO_FRAME_INTERVAL*1000);
-		if (feof(fp)) {
-			// 循环读取
-			log("h264 rewind");
-			fseek(fp, 0, SEEK_SET);
-		}
-
 	}
 	if (buf)
 		free(buf);
@@ -97,12 +106,19 @@ void *audio_capture_thread(void *param)
 		log("malloc err");
 		return NULL;
 	}
-	int nb_buf = 7;
+	int nb_buf = 7, ret = 0;
 	int64_t pts = 0;
 	for (;;) {
-		if (fread(buf, 1, 7, fp) < 0) {
+		ret = fread(buf, 1, 7, fp);
+		if (ret < 0) {
 			log("fread err");
 			goto err;
+		}
+		if (ret < 7 && feof(fp)) {
+			// 循环读取
+			log("aac rewind");
+			fseek(fp, 0, SEEK_SET);
+			continue;
 		}
 		short syncword = (buf[0] << 4) | (buf[1] >> 4);
 		if (syncword != 0xFFF) {
@@ -116,18 +132,20 @@ void *audio_capture_thread(void *param)
 			buf = (char *)realloc(buf, frame_length);
 			nb_buf = frame_length;
 		}
-		if (fread(buf+7, 1, frame_length-7, fp) < 0) {
+		ret = fread(buf+7, 1, frame_length-7, fp);
+		if (ret < 0) {
 			log("fread err");
 			goto err;
+		}
+		if (ret < frame_length-7 && feof(fp)) {
+			// 循环读取
+			log("aac rewind");
+			fseek(fp, 0, SEEK_SET);
+			continue;
 		}
 		int sampling_freq_idx = (buf[2] >> 2) & 0xF;
 		pts += ((1024*1000.0)/aacfreq[sampling_freq_idx]);
 		audio_cb(buf, frame_length, pts);
-		if (feof(fp)) {
-			// 循环读取
-			log("aac rewind");
-			fseek(fp, 0, SEEK_SET);
-		}
 		usleep(((1024*1000.0)/aacfreq[sampling_freq_idx])*1000);
 
 	}
