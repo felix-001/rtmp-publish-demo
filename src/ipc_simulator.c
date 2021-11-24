@@ -116,7 +116,7 @@ void *audio_capture_thread(void *param)
 			log("fread err");
 			goto err;
 		}
-		int frame_length = ((buf[3] & 0x3) << 11) | (buf[4] << 3) | (buf[5] >> 5);
+		short frame_length = ((buf[3] & 0x3) << 11) | (buf[4] << 3) | (buf[5] >> 5);
 		log("frame_length:%d", frame_length);
 		assert(frame_length > 7);
 		if (frame_length > nb_buf) {
