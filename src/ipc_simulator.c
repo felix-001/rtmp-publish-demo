@@ -68,14 +68,14 @@ void *video_capture_simulator_thread(void *param)
 		log("len:%x", nalu_len);
 		assert(nalu_len > 0);
 		offset += 4;
-		if (offset+nalu_len > h264_len) {
+		int nalu_type = h264[offset+8] & 0x1F;
+		video_cb(h264+offset, nalu_len, pts, !(nalu_type == NAL_NON_IDR));
+		offset += nalu_len;
+		if (offset > h264_len) {
 			// 循环读取
 			offset = 0;
 			continue;
 		}
-		int nalu_type = h264[offset+8] & 0x1F;
-		video_cb(h264+offset, nalu_len, pts, !(nalu_type == NAL_NON_IDR));
-		offset += nalu_len;
 		pts += VIDEO_FRAME_INTERVAL;
 		usleep(VIDEO_FRAME_INTERVAL);
 
