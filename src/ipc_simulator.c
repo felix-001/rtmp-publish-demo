@@ -103,6 +103,7 @@ void *audio_capture_thread(void *param)
 		log("open file %s err", AAC_FILE);
 		return NULL;
 	}
+	log("enter audio capture simulator thread");
 	char *buf = (char *)malloc(7);
 	if (!buf) {
 		log("malloc err");
@@ -116,6 +117,7 @@ void *audio_capture_thread(void *param)
 			goto err;
 		}
 		int frame_length = ((buf[2] & 0x3) << 11) | (buf[4] << 3) | (buf[5] >> 5);
+		assert(frame_length > 7);
 		if (frame_length > nb_buf) {
 			buf = (char *)realloc(buf, frame_length);
 			nb_buf = frame_length;
@@ -131,6 +133,7 @@ void *audio_capture_thread(void *param)
 			// 循环读取
 			fseek(fp, 0, SEEK_SET);
 		}
+		usleep(((1024*1000.0)/aacfreq[sampling_freq_idx])*1000);
 
 	}
 err:
