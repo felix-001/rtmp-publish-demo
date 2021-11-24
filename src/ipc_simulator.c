@@ -35,7 +35,7 @@ static audio_cb_t audio_cb;
 // 经过codec编码为h264之后，丢给应用层
 void *video_capture_simulator_thread(void *param)
 {
-	uint8_t *buf = (uint8_t)malloc(1024);
+	uint8_t *buf = (uint8_t *)malloc(1024);
 	int64_t pts = 0;
 	int nb_buf = 1024;
 
