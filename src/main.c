@@ -120,7 +120,7 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 	uint8_t * avcc_end = avcc + len;
 
 	while(avcc+offset < avcc_end) {
-		uint8_t nalu_type = avcc[4]&0x1F;
+		uint8_t nalu_type = (avcc+offset)[4]&0x1F;
 		int nalu_size = ntohl(*(int *)(avcc+offset));
 		assert(nalu_size > 0);
 		//log("nalu_size:%d", nalu_size);
