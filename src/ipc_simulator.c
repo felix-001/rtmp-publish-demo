@@ -71,7 +71,7 @@ void *video_capture_simulator_thread(void *param)
 		int nalu_type = h264[offset+8] & 0x1F;
 		video_cb(h264+offset, nalu_len, pts, !(nalu_type == NAL_NON_IDR));
 		offset += nalu_len;
-		if (offset > h264_len) {
+		if (offset >= h264_len) {
 			// 循环读取
 			offset = 0;
 			continue;
