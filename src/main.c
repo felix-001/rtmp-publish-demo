@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 		log("./rtmp-publish-demo <rtmp publish url>");
 		return 0;
 	}
-	rtmp_ctx = RtmpPubNew(argv[1], 10, RTMP_PUB_AUDIO_AAC, RTMP_PUB_AUDIO_AAC, RTMP_PUB_TIMESTAMP_ABSOLUTE);
+	rtmp_ctx = RtmpPubNew(argv[1], 10, RTMP_PUB_AUDIO_NONE, RTMP_PUB_AUDIO_NONE, RTMP_PUB_TIMESTAMP_ABSOLUTE);
     	if (RtmpPubInit(rtmp_ctx)) {
         	RtmpPubDel(rtmp_ctx);
 		return 0;
