@@ -133,11 +133,13 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 			// codec将关键帧丢给应用层，一般sps/pps是随关键帧一起过来的
 			RtmpPubSetVideoTimebase(rtmp_ctx, pts);
                 	RtmpPubSetSps(rtmp_ctx, avcc+offset, nalu_size);
+			log("set sps");
 			break;
 		case NALU_TYPE_PPS:
 			/* 4. 将pps数据传递给推流sdk */
 			// codec将关键帧丢给应用层，一般sps/pps是随关键帧一起过来的
 			RtmpPubSetPps(rtmp_ctx, avcc+offset, nalu_size);
+			log("set pps");
 			break;
 		case NALU_TYPE_IDR:
 			/* 5. 发送关键帧数据 */
@@ -146,6 +148,7 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 				ret = -1;
 				goto err;
 			}
+			log("send idr");
 			break;
         	case NALU_TYPE_SLICE:
 			/* 6. 发送非关键帧数据 */
@@ -154,6 +157,7 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 				ret = -1;
 				goto err;
 			}
+			log("send slice");
 			break;
 		default:
 			break;
@@ -183,6 +187,7 @@ int on_audio(char *aac, int len, int64_t pts)
 		log("RtmpPubSendAudioFrame err, %s", strerror(errno));
 		return -1;
 	}
+	log("send aac");
 	return 0;
 }
 
@@ -208,7 +213,7 @@ int main(int argc, char *argv[])
 	// 真实的ipc是codec编码一帧h264之后，丢给应用
 	// 层, on_video/on_audio是注册到模拟ipc的
 	// 回调函数，模拟的ipc采集一帧h264/aac之后，
-	// 会调用这个函数，讲h264/aac丢给应用层
+	// 会调用这个函数，将h264/aac丢给应用层
 	start_ipc_simulator(on_video, on_audio);
 	for(;;) {
 		sleep(3);
