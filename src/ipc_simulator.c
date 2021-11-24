@@ -70,7 +70,7 @@ void *video_capture_simulator_thread(void *param)
 		usleep(VIDEO_FRAME_INTERVAL*1000);
 		if (feof(fp)) {
 			// 循环读取
-			log("rewind");
+			log("h264 rewind");
 			fseek(fp, 0, SEEK_SET);
 		}
 
@@ -125,6 +125,7 @@ void *audio_capture_thread(void *param)
 		audio_cb(buf, frame_length, pts);
 		if (feof(fp)) {
 			// 循环读取
+			log("aac rewind");
 			fseek(fp, 0, SEEK_SET);
 		}
 		usleep(((1024*1000.0)/aacfreq[sampling_freq_idx])*1000);
