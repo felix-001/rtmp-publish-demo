@@ -28,6 +28,7 @@ typedef int (*audio_cb_t)(char *, int len, int64_t timestamp);
 void start_ipc_simulator(video_cb_t vcb, audio_cb_t acb);
 
 static RtmpPubContext *rtmp_ctx;
+static int h264_config_has_been_sent = 0;
 
 const uint8_t *avc_find_startcode_internal(const uint8_t *p, const uint8_t *end)
 {
@@ -128,12 +129,17 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 		switch(nalu_type) {
 		case  NALU_TYPE_SPS:
 			log("set sps, len:%d", nalu_size);
-			RtmpPubSetVideoTimebase(rtmp_ctx, pts);
-                	RtmpPubSetSps(rtmp_ctx, avcc+offset, nalu_size);
+			if (!h264_config_has_been_sent) {
+				RtmpPubSetVideoTimebase(rtmp_ctx, pts);
+                		RtmpPubSetSps(rtmp_ctx, avcc+offset, nalu_size);
+			}
 			break;
 		case NALU_TYPE_PPS:
 			log("set pps: len:%d", nalu_size);
-			RtmpPubSetPps(rtmp_ctx, avcc+offset, nalu_size);
+			if (!h264_config_has_been_sent) {
+				RtmpPubSetPps(rtmp_ctx, avcc+offset, nalu_size);
+				h264_config_has_been_sent = 1;
+			}
 			break;
 		case NALU_TYPE_IDR:
 			//log("send idr");
