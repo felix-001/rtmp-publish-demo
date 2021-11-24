@@ -128,15 +128,15 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 		offset += 4;
 		switch(nalu_type) {
 		case  NALU_TYPE_SPS:
-			log("set sps, len:%d", nalu_size);
 			if (!h264_config_has_been_sent) {
+				log("set sps, len:%d", nalu_size);
 				RtmpPubSetVideoTimebase(rtmp_ctx, pts);
                 		RtmpPubSetSps(rtmp_ctx, avcc+offset, nalu_size);
 			}
 			break;
 		case NALU_TYPE_PPS:
-			log("set pps: len:%d", nalu_size);
 			if (!h264_config_has_been_sent) {
+				log("set pps: len:%d", nalu_size);
 				RtmpPubSetPps(rtmp_ctx, avcc+offset, nalu_size);
 				h264_config_has_been_sent = 1;
 			}
