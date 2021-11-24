@@ -23,12 +23,12 @@
 #define NALU_TYPE_EOSTREAM  11
 #define NALU_TYPE_FILL      12
 
-typedef int (*video_cb_t)(char *h264, int len, int64_t timestamp, int is_key);
-typedef int (*audio_cb_t)(char *, int len, int64_t timestamp);
+typedef int (*video_cb_t)(char *h264, int len, int64_t pts, int is_key);
+typedef int (*audio_cb_t)(char *aac, int len, int64_t pts);
 void start_ipc_simulator(video_cb_t vcb, audio_cb_t acb);
 
 static RtmpPubContext *rtmp_ctx;
-static int h264_config_has_been_sent = 0;
+static int aac_config_has_been_sent = 0;
 
 const uint8_t *avc_find_startcode_internal(const uint8_t *p, const uint8_t *end)
 {
@@ -167,8 +167,22 @@ err:
 	return ret;
 }
 
-int on_audio(char *h264, int len, int64_t timestamp)
+int on_audio(char *aac, int len, int64_t pts)
 {
+	if (!aac_config_has_been_sent) {
+		char audioSpecCfg[] = { 0x14, 0x10 };
+        	RtmpPubSetAudioTimebase(rtmp_ctx, pts);
+        	RtmpPubSetAac(rtmp_ctx, audioSpecCfg, sizeof(audioSpecCfg) );
+		aac_config_has_been_sent = 1;
+	}
+	// rtmp推流不需要adts，所以需要把adts从aac中移除
+	int protection_absent = aac[1] & 0x01;
+	int adts_len = protection_absent ? 7 : 9;
+	/* 7. 发送aac音频 */
+	if (RtmpPubSendAudioFrame(rtmp_ctx, aac+adts_len, len-adts_len, pts) < 0) {
+		log("RtmpPubSendAudioFrame err");
+		return -1;
+	}
 	return 0;
 }
 

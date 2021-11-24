@@ -24,8 +24,8 @@
 #define NAL_NON_IDR (0x01)
 #define VIDEO_FRAME_INTERVAL (40) // 模拟帧率25fps
 
-typedef int (*video_cb_t)(char *h264, int len, int64_t timestamp, int is_key);
-typedef int (*audio_cb_t)(char *h264, int len, int64_t timestamp);
+typedef int (*video_cb_t)(char *h264, int len, int64_t pts, int is_key);
+typedef int (*audio_cb_t)(char *aac, int len, int64_t pts);
 
 static video_cb_t video_cb;
 static audio_cb_t audio_cb;
@@ -92,8 +92,50 @@ void *video_capture_simulator_thread(void *param)
 	return NULL;
 }
 
+static int aacfreq[13] = {96000, 88200,64000,48000,44100,32000,24000, 22050 , 16000 ,12000,11025,8000,7350};
+
+// 使用aac文件模拟ipc codec编码一帧aac，回调给应用层
+// 实际的场景是摄像头采集到一帧pcm，编码为aac，丢给应用层
 void *audio_capture_thread(void *param)
 {
+	FILE *fp = fopen(AAC_FILE, "r");
+	if (!fp) {
+		log("open file %s err", AAC_FILE);
+		return NULL;
+	}
+	char *buf = (char *)malloc(7);
+	if (!buf) {
+		log("malloc err");
+		return NULL;
+	}
+	int nb_buf = 7;
+	int64_t pts = 0;
+	for (;;) {
+		if (fread(buf, 1, 7, fp) < 0) {
+			log("fread err");
+			goto err;
+		}
+		int frame_length = ((buf[2] & 0x3) << 11) | (buf[4] << 3) | (buf[5] >> 5);
+		if (frame_length > nb_buf) {
+			buf = (char *)realloc(buf, frame_length);
+			nb_buf = frame_length;
+		}
+		if (fread(buf+7, 1, frame_length-7, fp) < 0) {
+			log("fread err");
+			goto err;
+		}
+		int sampling_freq_idx = (buf[2] >> 2) & 0xF;
+		pts += ((1024*1000.0)/aacfreq[sampling_freq_idx]);
+		audio_cb(buf, frame_length, pts);
+		if (feof(fp)) {
+			// 循环读取
+			fseek(fp, 0, SEEK_SET);
+		}
+
+	}
+err:
+	if (buf)
+		free(buf);
 	return NULL;
 }
 
