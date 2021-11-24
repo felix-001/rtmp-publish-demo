@@ -121,6 +121,7 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 	while(avcc+offset < avcc_end) {
 		uint8_t nalu_type = avcc[4]&0x1F;
 		int nalu_size = ntohl(*(int *)avcc);
+		assert(nalu_size > 0);
 		offset += 4;
 		switch(nalu_type) {
 		case  NALU_TYPE_SPS:
