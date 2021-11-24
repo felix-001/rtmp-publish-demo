@@ -6,6 +6,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <assert.h>
+#include <pthread.h>
 #include "rtmp_publish.h"
 
 #define log(fmt, args...) printf("%s $ "fmt"\n", __FUNCTION__, ##args)
@@ -29,6 +30,7 @@ void start_ipc_simulator(video_cb_t vcb, audio_cb_t acb);
 
 static RtmpPubContext *rtmp_ctx;
 static int aac_config_has_been_sent = 0;
+static pthread_mutex_t mutex;
 
 const uint8_t *avc_find_startcode_internal(const uint8_t *p, const uint8_t *end)
 {
@@ -122,6 +124,7 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 	annexB2avcc(h264, len, avcc);
 	uint8_t * avcc_end = avcc + len;
 
+	pthread_mutex_lock(&mutex);
 	while(avcc+offset < avcc_end) {
 		uint8_t nalu_type = (avcc+offset)[4]&0x1F;
 		int nalu_size = ntohl(*(int *)(avcc+offset));
@@ -166,6 +169,7 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 	}
 
 err:
+	pthread_mutex_unlock(&mutex);
 	if (avcc)
 		free(avcc);
 	return ret;
@@ -173,6 +177,7 @@ err:
 
 int on_audio(char *aac, int len, int64_t pts)
 {
+	pthread_mutex_lock(&mutex);
 	if (!aac_config_has_been_sent) {
 		char audioSpecCfg[] = { 0x14, 0x10 };
         	RtmpPubSetAudioTimebase(rtmp_ctx, pts);
@@ -185,8 +190,10 @@ int on_audio(char *aac, int len, int64_t pts)
 	/* 7. 发送aac音频 */
 	if (RtmpPubSendAudioFrame(rtmp_ctx, aac+adts_len, len-adts_len, pts) < 0) {
 		log("RtmpPubSendAudioFrame err, %s", strerror(errno));
+		pthread_mutex_unlock(&mutex);
 		return -1;
 	}
+	pthread_mutex_unlock(&mutex);
 	log("send aac");
 	return 0;
 }
@@ -208,6 +215,7 @@ int main(int argc, char *argv[])
 		log("rtmp connect err, errno:%d", errno);
 		return 0;
 	}
+	pthread_mutex_init(&mutex, NULL);
 	log("rtmp connect %s success", argv[1]);
 	// h264文件模拟ipc相关代码，相关代码不需要关注
 	// 真实的ipc是codec编码一帧h264之后，丢给应用
