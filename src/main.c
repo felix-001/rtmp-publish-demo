@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <assert.h>
 #include "rtmp_publish.h"
 
 #define log(fmt, args...) printf("%s $ "fmt"\n", __FUNCTION__, ##args)
