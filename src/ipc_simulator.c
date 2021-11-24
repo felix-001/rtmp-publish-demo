@@ -74,11 +74,11 @@ void *video_capture_simulator_thread(void *param)
 		if (offset >= h264_len) {
 			// 循环读取
 			offset = 0;
-			log("rewind");
+			//log("rewind");
 			continue;
 		}
 		pts += VIDEO_FRAME_INTERVAL;
-		usleep(VIDEO_FRAME_INTERVAL);
+		usleep(VIDEO_FRAME_INTERVAL*1000);
 
 	}
 	if (h264)
