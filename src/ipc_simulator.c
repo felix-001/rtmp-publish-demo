@@ -57,7 +57,7 @@ void *video_capture_simulator_thread(void *param)
 	int h264_len = 0, offset = 0;
 	int64_t pts = 0;
 
-	log("enter video capture simulator read");
+	log("enter video capture simulator thread");
 	if ((h264_len = read_file_to_buf(H264_FILE, &h264)) < 0) {
 		return NULL;
 	}

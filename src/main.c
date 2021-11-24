@@ -124,13 +124,16 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 		offset += 4;
 		switch(nalu_type) {
 		case  NALU_TYPE_SPS:
+			log("set sps");
 			RtmpPubSetVideoTimebase(rtmp_ctx, pts);
                 	RtmpPubSetSps(rtmp_ctx, avcc, nalu_size);
 			break;
 		case NALU_TYPE_PPS:
+			log("set pps");
 			RtmpPubSetPps(rtmp_ctx, avcc, nalu_size);
 			break;
 		case NALU_TYPE_IDR:
+			log("send idr");
 		 	if (RtmpPubSendVideoKeyframe(rtmp_ctx, avcc, nalu_size, pts)) {
             			log("RtmpPubSendVideoKeyframe() error, errno = %d\n", errno);
 				ret = -1;
@@ -138,6 +141,7 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 			}
 			break;
         	case NALU_TYPE_SLICE:
+			log("send slice");
 			if (RtmpPubSendVideoInterframe(rtmp_ctx, avcc, nalu_size, pts)) {
             			log("RtmpPubSendVideoInterframe() error, errno = %d\n", errno);
 				ret = -1;
