@@ -30,65 +30,53 @@ typedef int (*audio_cb_t)(char *aac, int len, int64_t pts);
 static video_cb_t video_cb;
 static audio_cb_t audio_cb;
 
-static int read_file_to_buf(char *file, char **buf)
-{
-        FILE * fp = fopen(file, "r");
-
-        if (!fp) {
-		log("open file %s err", file);
-                return -1;
-        }
-        fseek(fp, 0, SEEK_END);
-        int len = ftell(fp);
-        fseek(fp, 0, SEEK_SET);
-
-        *buf = (char *)malloc(len);
-        assert(buf != NULL);
-        if (fread(*buf, 1, len, fp) < 0) {
-                log("read file %s fail", file);
-                fclose(fp);
-                free(*buf);
-                return -1;
-        }
-        fclose(fp);
-        return len;
-}
-
 // 使用h264文件模拟ipc codec编码一帧h264，回调给应用层
 // 模拟的帧率是25fps,实际的场景是cam sensor采集到yuv/rgb
 // 经过codec编码为h264之后，丢给应用层
 void *video_capture_simulator_thread(void *param)
 {
-	char *h264 = NULL;
-	int h264_len = 0, offset = 0;
+	uint8_t *buf = (uint8_t)malloc(1024);
 	int64_t pts = 0;
+	int nb_buf = 1024;
 
-	log("enter video capture simulator thread");
-	if ((h264_len = read_file_to_buf(H264_FILE, &h264)) < 0) {
+	FILE *fp = fopen(H264_FILE, "r");
+	if (!fp) {
+		log("open file %s err", H264_FILE);
 		return NULL;
 	}
-	assert(h264_len > 0);
+
+	log("enter video capture simulator thread");
 	for(;;) {
 		int nalu_len = 0;
-		memcpy(&nalu_len, h264+offset, 4);
-		//log("len:%x", nalu_len);
-		assert(nalu_len > 0);
-		offset += 4;
-		int nalu_type = h264[offset+8] & 0x1F;
-		video_cb(h264+offset, nalu_len, pts, !(nalu_type == NAL_NON_IDR));
-		offset += nalu_len;
-		if (offset >= h264_len) {
-			// 循环读取
-			offset = 0;
-			//log("rewind");
-			continue;
+		if (fread(&nalu_len, 1, 4, fp) < 0) {
+			log("fread err");
+			return NULL;
 		}
+		assert(nalu_len > 0);
+		if (nalu_len > nb_buf) {
+			buf = (uint8_t *)realloc(buf, nalu_len);
+			if (!buf) {
+				log("realloc err");
+				return NULL;
+			}
+		}
+		if (fread(buf, 1, nalu_len, fp) < 0) {
+			log("fread err");
+			return NULL;
+		}
+		//log("len:%x", nalu_len);
+		video_cb(buf, nalu_len, pts, 0);
 		pts += VIDEO_FRAME_INTERVAL;
 		usleep(VIDEO_FRAME_INTERVAL*1000);
+		if (feof(fp)) {
+			// 循环读取
+			log("rewind");
+			fseek(fp, 0, SEEK_SET);
+		}
 
 	}
-	if (h264)
-		free(h264);
+	if (buf)
+		free(buf);
 	return NULL;
 }
 
