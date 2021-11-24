@@ -118,7 +118,7 @@ void *audio_capture_thread(void *param)
 		}
 		short syncword = (buf[0] << 4) | (buf[1] >> 4);
 		if (syncword != 0xFFF) {
-			log("check syncword err");
+			log("check syncword err, %x", syncword);
 			goto err;
 		}
 		short frame_length = ((buf[3] & 0x3) << 11) | (buf[4] << 3) | (buf[5] >> 5);
