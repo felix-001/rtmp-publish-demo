@@ -128,18 +128,18 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 		offset += 4;
 		switch(nalu_type) {
 		case  NALU_TYPE_SPS:
-			if (!h264_config_has_been_sent) {
+			//if (!h264_config_has_been_sent) {
 				log("set sps, len:%d", nalu_size);
 				RtmpPubSetVideoTimebase(rtmp_ctx, pts);
                 		RtmpPubSetSps(rtmp_ctx, avcc+offset, nalu_size);
-			}
+			//}
 			break;
 		case NALU_TYPE_PPS:
-			if (!h264_config_has_been_sent) {
+			//if (!h264_config_has_been_sent) {
 				log("set pps: len:%d", nalu_size);
 				RtmpPubSetPps(rtmp_ctx, avcc+offset, nalu_size);
 				h264_config_has_been_sent = 1;
-			}
+			//}
 			break;
 		case NALU_TYPE_IDR:
 			//log("send idr");
