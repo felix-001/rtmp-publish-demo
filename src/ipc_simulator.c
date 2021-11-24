@@ -11,6 +11,12 @@
 #include <string.h>
 #include <arpa/inet.h>
 
+/*
+* 本文件用于使用文件模拟ipc采集一帧h264/aac后，丢给应用层
+* 与sdk的使用没有关系，sdk用户可以不用关注此文件
+* 真实的场景是ipc片上codec采集视音频数据后，丢给应用层
+*/
+
 #define log(fmt, args...) printf("%s() "fmt"\n",  __FUNCTION__, ##args)
 
 #define H264_FILE "../media/video.h264"

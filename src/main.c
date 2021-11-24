@@ -114,7 +114,8 @@ int annexB2avcc(const uint8_t *buf_in, int buf_size, uint8_t *buf_out)
 int on_video(char *h264, int len, int64_t pts, int is_key)
 {
 	int ret = 0, offset = 0;
-	uint8_t *avcc = (uint8_t *)malloc(len);
+	// 考虑到有的startcode为3个字节的情况, 这里增加10字节防止溢出
+	uint8_t *avcc = (uint8_t *)malloc(len+10);
 	if (!avcc) {
 		return -1;
 	}
@@ -125,7 +126,6 @@ int on_video(char *h264, int len, int64_t pts, int is_key)
 		uint8_t nalu_type = (avcc+offset)[4]&0x1F;
 		int nalu_size = ntohl(*(int *)(avcc+offset));
 		assert(nalu_size > 0);
-		//log("nalu_size:%d", nalu_size);
 		offset += 4;
 		switch(nalu_type) {
 		case  NALU_TYPE_SPS:
