@@ -116,6 +116,11 @@ void *audio_capture_thread(void *param)
 			log("fread err");
 			goto err;
 		}
+		uint8_t syncword = (buf[0] << 4) | (buf[1] >> 4);
+		if (syncword != 0xFFF) {
+			log("check syncword err");
+			goto err;
+		}
 		short frame_length = ((buf[3] & 0x3) << 11) | (buf[4] << 3) | (buf[5] >> 5);
 		log("frame_length:%d", frame_length);
 		assert(frame_length > 7);
