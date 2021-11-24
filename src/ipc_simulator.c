@@ -104,7 +104,7 @@ void *audio_capture_thread(void *param)
 		return NULL;
 	}
 	log("enter audio capture simulator thread");
-	char *buf = (char *)malloc(7);
+	uint8_t *buf = (uint8_t *)malloc(7);
 	if (!buf) {
 		log("malloc err");
 		return NULL;
