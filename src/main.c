@@ -180,7 +180,7 @@ int on_audio(char *aac, int len, int64_t pts)
 	int adts_len = protection_absent ? 7 : 9;
 	/* 7. 发送aac音频 */
 	if (RtmpPubSendAudioFrame(rtmp_ctx, aac+adts_len, len-adts_len, pts) < 0) {
-		log("RtmpPubSendAudioFrame err");
+		log("RtmpPubSendAudioFrame err, %s", strerror(errno));
 		return -1;
 	}
 	return 0;
