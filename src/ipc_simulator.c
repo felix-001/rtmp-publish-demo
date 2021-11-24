@@ -61,10 +61,11 @@ void *video_capture_simulator_thread(void *param)
 	if ((h264_len = read_file_to_buf(H264_FILE, &h264)) < 0) {
 		return NULL;
 	}
+	assert(h264_len > 0);
 	while(offset < h264_len) {
 		int nalu_len = 0;
 		memcpy(&nalu_len, h264+offset, 4);
-		//log("len:%x", nalu_len);
+		log("len:%x", nalu_len);
 		assert(nalu_len > 0);
 		offset += 4;
 		if (offset+nalu_len > h264_len) {
