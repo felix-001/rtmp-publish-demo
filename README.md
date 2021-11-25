@@ -26,6 +26,13 @@ make
 ```
 
 # 运行
+1. 将media目录下的文件拷贝到和`rtmp-publish-demo`同级目录下
+
+```
+cp ../media/* .
+```
+
+2. 运行
 ```
 ./rtmp-publish-demo <rtmp推流地址>
 ```
