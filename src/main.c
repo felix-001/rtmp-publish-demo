@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 	/* 1. 创建推流实例化对象 */
-	rtmp_ctx = RtmpPubNew(argv[1], 10, RTMP_PUB_AUDIO_AAC, RTMP_PUB_AUDIO_AAC, RTMP_PUB_TIMESTAMP_ABSOLUTE);
+	rtmp_ctx = RtmpPubNew(argv[1], 30, RTMP_PUB_AUDIO_AAC, RTMP_PUB_AUDIO_AAC, RTMP_PUB_TIMESTAMP_ABSOLUTE);
     	if (RtmpPubInit(rtmp_ctx)) {
         	RtmpPubDel(rtmp_ctx);
 		return 0;
