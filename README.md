@@ -20,6 +20,12 @@ cmake .. -DARCH=tda2 -DCROSS_COMPILE=xxx
 cmake .. -DARCH=tda2 -DCROSS_COMPILE=arm-linux-gnueabi-
 ```
 
+如果是x86平台:
+```
+cmake .. -DARCH=x86
+```
+
+
  - 编译
 ```
 make
